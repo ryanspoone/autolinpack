@@ -1,0 +1,86 @@
+#!/bin/bash
+
+##############################################################################
+#  autolinpack - This harness automates the running of Linpack.
+#
+#  Usage: autolinpack
+#
+##############################################################################
+#
+#  Last Updated:
+#     2/24/2016
+#
+#  Authors/Contributors:
+#     Ryan Spoone (ryanspoone@gmail.com)
+#
+##############################################################################
+
+##############################################################################
+# Make sure we are working in the this script's source directory
+##############################################################################
+AUTO_LP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+cd "$AUTO_LP_DIR" || exit
+export AUTO_LP_DIR
+
+############################################################
+# Import sources
+############################################################
+# shellcheck disable=SC1091,SC1090
+source "$AUTO_LP_DIR/bin/generic.sh"
+# shellcheck disable=SC1091,SC1090
+source "$AUTO_LP_DIR/bin/intel.sh"
+# shellcheck disable=SC1091,SC1090
+source "$AUTO_LP_DIR/bin/system_information.sh"
+
+############################################################
+# Argument switch variables
+############################################################
+PS3="Enter your choice: "
+export NUMBER_OF_TESTS=3
+export PROBLEM_SIZE=80000
+export LEADING_DIMENSION=80032
+export ITERATION=2
+export ALIGNMENT=4
+
+getCPU
+
+
+if [[ "$CPU" == *'Intel'* || "$CPU" == *'intel'* || "$CPU" == *'INTEL'* ]]; then
+
+  intel_options=("Intel Linpack" "Intel MP Linpack" "Generic Build (source)" )
+
+  echo "Pick your choice: "
+  select opt in "${intel_options[@]}"; do
+    case $opt in
+      "Intel Linpack")
+        prerequisitesIntel
+        getSystemInfo
+        buildLinpack
+        runLinpack
+        break
+        ;;
+      "Intel MP Linpack")
+        prerequisitesIntel
+        getSystemInfo
+        buildMPLinpack
+        runMPLinpack
+        break
+        ;;
+      "Generic Build (source)")
+        prerequisitesGeneric
+        getSystemInfo
+        buildGeneric
+        runGeneric
+        break
+        ;;
+      *) echo "That's a wrong option. Please try again.";;
+    esac
+  done
+else
+  prerequisitesGeneric
+  getSystemInfo
+  buildGeneric
+  runGeneric
+fi
+
+exit
